@@ -5,11 +5,15 @@ clc
 directory = "/Users/eugenio/Desktop/fair-tasks/Fair_Scheduler_";
 
 map = rs = shuffle = cell (5, 2);
+nm = nr = zeros (5, 2);
 
 for ii = 1:size (map, 1)
   jj = 1;
   for dir = glob ([directory, num2str(ii), "/R*"])'
     dir = dir{1};
+    aux = load ([dir, "/numTasks.txt"]);
+    nm(ii, jj) = aux(1);
+    nr(ii, jj) = aux(2);
     map{ii, jj} = load ([dir, "/Map 1.txt"]);
     rs{ii, jj} = load ([dir, "/rs 2.txt"]);
     shuffle{ii, jj++} = load ([dir, "/Shuffle 2.txt"]);
@@ -103,6 +107,11 @@ for ii = 1:rows
       
       fprintf (fid, "Avg Shuffle: %d\n", round (fraction * finalAvgRs(ii, jj, kk)));
       fprintf (fid, "Max Shuffle: %d\n\n", round (fraction * finalMaxRs(ii, jj, kk)));
+      fclose (fid);
+      
+      fid = fopen ([indir, "/numTasks.txt"], "w");
+      fprintf (fid, "Map: %d\n", nm(ii, jj));
+      fprintf (fid, "RS: %d\n", nr(ii, jj));
       fclose (fid);
     endfor
   endfor

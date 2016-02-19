@@ -19,7 +19,7 @@ class InstanceCreator(directories: Map[String, File],
       job setHup 10
       job setThink 1e4
       job setJob_penalty {
-        Random nextInt 20 + 15
+        (Random nextInt 21) + 15
       }
       job setD {
         Random.nextDouble * 2e6 + 5e5
@@ -40,7 +40,7 @@ class InstanceCreator(directories: Map[String, File],
           val vmType = new TypeVM
           vmType setId vm.getName
           vmType setEta { Random.nextDouble * 0.3 + 0.1 }
-          vmType setR { Random nextInt 30 + 10 }
+          vmType setR { (Random nextInt 31) + 10 }
           vmType
       }
       id.toInt.asInstanceOf[java.lang.Integer] -> {
@@ -60,16 +60,21 @@ class InstanceCreator(directories: Map[String, File],
             case name if name contains "small" => 2
             case name if name contains "medium" => 4
             case name if name contains "large" => 8
-            case _ => Random nextInt 8 * 2
+            case _ =>
+              val cores = (Random nextInt 8) + 1
+              cores * 2
           }
           profile setCM containers
           profile setCR containers
-          profile setNM 65
-          profile setNR 35
           profile setSH1max 0.0
 
-          val text = Source.fromFile(new File(vm, "param.txt")).getLines()
-          text foreach {
+          Source.fromFile(new File(vm, "numTasks.txt")).getLines() foreach {
+            case TaskNumberRegex.mapNumber(value) => profile setNM value.toInt
+            case TaskNumberRegex.rsNumber(value) => profile setNR value.toInt
+            case _ =>
+          }
+
+          Source.fromFile(new File(vm, "param.txt")).getLines() foreach {
             case ParameterRegex.avgMap(value) => profile setMavg value.toDouble
             case ParameterRegex.maxMap(value) => profile setMmax value.toDouble
             case ParameterRegex.avgReduce(value) => profile setRavg value.toDouble
