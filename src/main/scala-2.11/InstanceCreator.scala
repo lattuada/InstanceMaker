@@ -10,13 +10,11 @@ import scala.io.Source
 import scala.util.Random
 
 class InstanceCreator(directories: Map[String, File],
-                      sets: Iterator[Set[String]]) {
+                      sets: Iterator[Set[String]], hUp: Int) {
   private lazy val jobClasses = directories map {
     case (id, directory) =>
       val job = new JobClass
       job setId id.toInt
-      job setHlow 5
-      job setHup 10
       job setThink 1e4
       job setJob_penalty {
         (Random nextInt 21) + 15
@@ -24,6 +22,9 @@ class InstanceCreator(directories: Map[String, File],
       job setD {
         Random.nextDouble * 2e6 + 5e5
       }
+      job setHup hUp
+      val hLow = (hUp * 0.7).round
+      job setHlow hLow.toInt
       id -> job
   }
 
@@ -164,10 +165,10 @@ class InstanceCreator(directories: Map[String, File],
 }
 
 object InstanceCreator {
-  def apply(directory: File, numClasses: Int) = {
+  def apply(directory: File, numClasses: Int, hUp: Int) = {
     val childDirectories = directory.listFiles filter {
       _.isDirectory } map { x => x.getName -> x }
     val directoryMap = childDirectories.toMap
-    new InstanceCreator(directoryMap, directoryMap.keySet subsets numClasses)
+    new InstanceCreator(directoryMap, directoryMap.keySet subsets numClasses, hUp)
   }
 }
