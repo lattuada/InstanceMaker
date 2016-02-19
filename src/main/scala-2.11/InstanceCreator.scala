@@ -9,111 +9,113 @@ import scala.collection.convert.WrapAsJava
 import scala.io.Source
 import scala.util.Random
 
-class InstanceCreator(sets: Iterator[Set[File]]) {
-  private lazy val data = for (set <- sets) yield {
-    val classes = set.map(x => x.getName -> x).toMap
-    val instanceId = classes.keys.mkString
-
-    val instance = InstanceDataGenerator build()
-    instance setId instanceId
-    instance setGamma {
-      classes.size * 200
-    }
-
-    val classList = classes map {
-      case (id, directory) =>
-        val job = new JobClass
-        job setId id.toInt
-        job setHlow 5
-        job setHup 10
-        job setThink 1e4
-        job setJob_penalty {
-          Random nextInt 20 + 15
-        }
-        job setD {
-          Random.nextDouble * 2e6 + 5e5
-        }
-        job
-    }
-    instance setLstClass {
-      WrapAsJava seqAsJavaList classList.toSeq
-    }
-
-    val vmTypes = classes map {
-      case (id, directory) =>
-        val myTypes = directory.listFiles filter {
-          _.isDirectory
-        }
-        id -> myTypes
-    }
-
-    val vmMap = vmTypes map {
-      case (id, types) =>
-        val typeList = types map {
-          vm =>
-            val vmType = new TypeVM
-            vmType setId vm.getName
-            vmType setEta {
-              Random.nextDouble * 0.4
-            }
-            vmType setR {
-              Random nextInt 40
-            }
-            vmType
-        }
-        id.toInt.asInstanceOf[java.lang.Integer] -> {
-          WrapAsJava seqAsJavaList typeList
-        }
-    }
-    instance setMapTypeVMs {
-      WrapAsJava mapAsJavaMap vmMap.toMap
-    }
-
-    val profileMap = for (
-      (id, types) <- vmTypes;
-      vm <- types
-    ) yield {
-      val vmId = vm.getName
-      val key = new TypeVMJobClassKey(id.toInt, vmId)
-      val profile = new Profile
-
-      val containers = vmId match {
-        case name if name contains "small" => 2
-        case name if name contains "medium" => 4
-        case name if name contains "large" => 8
-        case _ => Random nextInt 8 * 2
+class InstanceCreator(directories: Map[String, File],
+                      sets: Iterator[Set[String]]) {
+  private lazy val jobClasses = directories map {
+    case (id, directory) =>
+      val job = new JobClass
+      job setId id.toInt
+      job setHlow 5
+      job setHup 10
+      job setThink 1e4
+      job setJob_penalty {
+        Random nextInt 20 + 15
       }
-      profile setCM containers
-      profile setCR containers
-      profile setNM 65
-      profile setNR 35
-      profile setSH1max 0.0
+      job setD {
+        Random.nextDouble * 2e6 + 5e5
+      }
+      id -> job
+  }
 
-      val text = Source.fromFile(new File(vm, "param.txt")).getLines()
-      text foreach {
-        case ParameterRegex.avgMap(value) => profile setMavg value.toDouble
-        case ParameterRegex.maxMap(value) => profile setMmax value.toDouble
-        case ParameterRegex.avgReduce(value) => profile setRavg value.toDouble
-        case ParameterRegex.maxReduce(value) => profile setRmax value.toDouble
-        case ParameterRegex.avgShuffle(value) => profile setSHtypavg value.toDouble
-        case ParameterRegex.maxShuffle(value) => profile setSHtypmax value.toDouble
-        case _ =>
+  private val vmDirectories = directories map {
+    case (id, directory) =>
+      val types = directory.listFiles filter { _.isDirectory }
+      id -> types
+  }
+
+  private lazy val vmTypes = vmDirectories map {
+    case (id, types) =>
+      val typeList = types map {
+        vm =>
+          val vmType = new TypeVM
+          vmType setId vm.getName
+          vmType setEta { Random.nextDouble * 0.3 + 0.1 }
+          vmType setR { Random nextInt 30 + 10 }
+          vmType
+      }
+      id.toInt.asInstanceOf[java.lang.Integer] -> {
+        WrapAsJava seqAsJavaList typeList
+      }
+  }
+
+  private lazy val jobProfiles = vmDirectories map {
+    case (id, types) =>
+      val profiles = types map {
+        vm =>
+          val vmId = vm.getName
+          val key = new TypeVMJobClassKey(id.toInt, vmId)
+          val profile = new Profile
+
+          val containers = vmId match {
+            case name if name contains "small" => 2
+            case name if name contains "medium" => 4
+            case name if name contains "large" => 8
+            case _ => Random nextInt 8 * 2
+          }
+          profile setCM containers
+          profile setCR containers
+          profile setNM 65
+          profile setNR 35
+          profile setSH1max 0.0
+
+          val text = Source.fromFile(new File(vm, "param.txt")).getLines()
+          text foreach {
+            case ParameterRegex.avgMap(value) => profile setMavg value.toDouble
+            case ParameterRegex.maxMap(value) => profile setMmax value.toDouble
+            case ParameterRegex.avgReduce(value) => profile setRavg value.toDouble
+            case ParameterRegex.maxReduce(value) => profile setRmax value.toDouble
+            case ParameterRegex.avgShuffle(value) => profile setSHtypavg value.toDouble
+            case ParameterRegex.maxShuffle(value) => profile setSHtypmax value.toDouble
+            case _ =>
+          }
+
+          key -> profile
+      }
+      id -> profiles
+  }
+
+  private lazy val data = sets map {
+    set =>
+      val instanceId = set mkString "_"
+
+      val instance = InstanceDataGenerator.build()
+      instance setId instanceId
+      instance setGamma { set.size * 200 }
+
+      val classList = set map jobClasses
+      instance setLstClass {
+        WrapAsJava seqAsJavaList classList.toSeq
       }
 
-      key -> profile
-    }
-    instance setMapProfiles {
-      WrapAsJava mapAsJavaMap profileMap.toMap
-    }
+      val integerSet = set map { _.toInt.asInstanceOf[java.lang.Integer] }
+      val vmMap = vmTypes filterKeys integerSet
+      instance setMapTypeVMs {
+        WrapAsJava mapAsJavaMap vmMap.toMap
+      }
 
-    (instanceId, set, instance)
+      val profileMap = set map jobProfiles
+      instance setMapProfiles {
+        WrapAsJava mapAsJavaMap profileMap.flatten.toMap
+      }
+
+      (instanceId, set, instance)
   }
 
   def create(): Unit = {
     def fileCopyingHelper(input: File, output: File) = {
       val writer = new BufferedWriter(new FileWriter(output))
-      Source.fromFile(input).getLines() filterNot { _ contains "#" } filterNot {
-        _.isEmpty } map { _.trim } foreach {  line => writer write s"$line\n" }
+      Source.fromFile(input).getLines() filterNot { _ contains "#" } map {
+        _.trim } filterNot { _.isEmpty } foreach { line => writer write s"$line\n" }
       writer.close()
     }
 
@@ -124,10 +126,10 @@ class InstanceCreator(sets: Iterator[Set[File]]) {
     }
 
     data foreach {
-      case (id, dirs, instance) =>
+      case (id, classes, instance) =>
         val outputDirectory = new File(id)
         outputDirectory.mkdir()
-        dirs foreach {
+        classes map directories foreach {
           inputDirectory =>
             val jobId = inputDirectory.getName
             inputDirectory.listFiles filter { _.isDirectory } foreach {
@@ -158,8 +160,9 @@ class InstanceCreator(sets: Iterator[Set[File]]) {
 
 object InstanceCreator {
   def apply(directory: File, numClasses: Int) = {
-    val childDirectories = directory.listFiles filter { _.isDirectory }
-    val sets = childDirectories.toSet subsets numClasses
-    new InstanceCreator(sets)
+    val childDirectories = directory.listFiles filter {
+      _.isDirectory } map { x => x.getName -> x }
+    val directoryMap = childDirectories.toMap
+    new InstanceCreator(directoryMap, directoryMap.keySet subsets numClasses)
   }
 }
