@@ -16,12 +16,8 @@ class InstanceCreator(directories: Map[String, File],
       val job = new JobClass
       job setId id.toInt
       job setThink 1e4
-      job setJob_penalty {
-        (Random nextInt 21) + 15
-      }
-      job setD {
-        Random.nextDouble * 2e6 + 5e5
-      }
+      job setJob_penalty (Random nextInt 21) + 15
+      job setD Random.nextDouble * 2e6 + 5e5
       job setHup hUp
       val hLow = (hUp * 0.7).round
       job setHlow hLow.toInt
@@ -40,8 +36,8 @@ class InstanceCreator(directories: Map[String, File],
         vm =>
           val vmType = new TypeVM
           vmType setId vm.getName
-          vmType setEta { Random.nextDouble * 0.3 + 0.1 }
-          vmType setR { (Random nextInt 31) + 10 }
+          vmType setEta Random.nextDouble * 0.3 + 0.1
+          vmType setR (Random nextInt 31) + 10
           vmType
       }
       id.toInt.asInstanceOf[java.lang.Integer] -> {
@@ -96,7 +92,7 @@ class InstanceCreator(directories: Map[String, File],
 
       val instance = InstanceDataGenerator.build()
       instance setId instanceId
-      instance setGamma { set.size * 200 }
+      instance setGamma set.size * hUp * 50
 
       val classList = set map jobClasses
       instance setLstClass {
