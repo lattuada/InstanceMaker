@@ -9,8 +9,11 @@ lazy val root = (project in file(".")).
   settings(commonSettings: _*).
   settings(
     name := "InstanceMaker",
-    resolvers += "Deib Polimi" at "https://github.com/deib-polimi/deib-polimi-mvn-repo/raw/master/releases",
-    libraryDependencies += "it.polimi.diceH2020" % "SPACE4Cloud-shared" % "0.1.4-RELEASE"
+    resolvers ++= Seq(
+      "Deib Polimi" at "https://github.com/deib-polimi/deib-polimi-mvn-repo/raw/master/releases",
+      "Deib Polimi Snapshots" at "https://github.com/deib-polimi/deib-polimi-mvn-repo/raw/master/snapshots"
+    ),
+    libraryDependencies += "it.polimi.diceH2020" % "SPACE4Cloud-shared" % "0.1.5-SNAPSHOT"
   )
 
 assemblyOption in assembly := (assemblyOption in assembly).value.copy(prependShellScript = Some(defaultShellScript))
