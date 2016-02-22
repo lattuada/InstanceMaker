@@ -88,7 +88,7 @@ class InstanceCreator(directories: Map[String, File],
 
   private lazy val data = sets map {
     set =>
-      val instanceId = set mkString "_"
+      val instanceId = set + s"h$hUp" mkString "_"
 
       val instance = InstanceDataGenerator.build()
       instance setId instanceId
