@@ -53,15 +53,13 @@ class InstanceCreator(directories: Map[String, File],
           val key = new TypeVMJobClassKey(id.toInt, vmId)
           val profile = new Profile
 
-          val containers = vmId match {
-            case name if name contains "medium" => 2
-            case name if name contains "2xlarge" => 16
-            case name if name contains "5xlarge" => 40
-            case name if name contains "xlarge" => 8
-            case name if name contains "large" => 4
-            case _ =>
-              val cores = (Random nextInt 16) + 1
-              cores * 2
+          val (containers, provider) = vmId match {
+            case name if name contains "medium" => 2 -> "Amazon"
+            case name if name contains "2xlarge" => 16 -> "Amazon"
+            case name if name contains "5xlarge" => 40 -> "Cineca"
+            case name if name contains "xlarge" => 8 -> "Amazon"
+            case name if name contains "large" => 4 -> "Amazon"
+            case _ => throw new RuntimeException("error: unrecognized VM type")
           }
           profile setCM containers
           profile setCR containers
@@ -83,7 +81,7 @@ class InstanceCreator(directories: Map[String, File],
             case _ =>
           }
 
-          key -> profile
+          key -> (profile, provider)
       }
       id -> profiles
   }
@@ -107,9 +105,17 @@ class InstanceCreator(directories: Map[String, File],
         WrapAsJava mapAsJavaMap vmMap.toMap
       }
 
-      val profileMap = set map jobProfiles
+      val couples = (Seq[(TypeVMJobClassKey, (Profile, String))]() /: { set map jobProfiles })( _ ++ _ ).toMap
+      val providers = couples.map{ case (_, (_, provider)) => provider }.toSet
+      instance setProvider {
+        providers.size match {
+          case 1 => providers.head
+          case _ => throw new RuntimeException("error: more than one provider in the same instance")
+        }
+      }
+      val profileMap = couples map { case (key, (profile, _)) => key -> profile }
       instance setMapProfiles {
-        WrapAsJava mapAsJavaMap profileMap.flatten.toMap
+        WrapAsJava mapAsJavaMap profileMap
       }
 
       (instanceId, set, instance)
