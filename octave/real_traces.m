@@ -59,7 +59,7 @@ for ii = 1:rows
     dir = [output_dir, "/", class];
     mkdir (dir);
     
-    indir = [dir, "/large"];
+    indir = [dir, "/5xlarge"];
     mkdir (indir);
     
     aux = round (finalMap{ii, jj});

@@ -54,11 +54,13 @@ class InstanceCreator(directories: Map[String, File],
           val profile = new Profile
 
           val containers = vmId match {
-            case name if name contains "small" => 2
-            case name if name contains "medium" => 4
-            case name if name contains "large" => 8
+            case name if name contains "medium" => 2
+            case name if name contains "2xlarge" => 16
+            case name if name contains "5xlarge" => 40
+            case name if name contains "xlarge" => 8
+            case name if name contains "large" => 4
             case _ =>
-              val cores = (Random nextInt 8) + 1
+              val cores = (Random nextInt 16) + 1
               cores * 2
           }
           profile setCM containers
