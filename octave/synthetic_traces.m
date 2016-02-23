@@ -78,7 +78,7 @@ for ii = 1:size (map, 1)
 endfor
 
 output_dir = "nuove_tracce";
-vms = {"small", "medium", "large"};
+vms = {"medium", "large", "xlarge"};
 
 for ii = 1:rows
   for jj = 1:cols

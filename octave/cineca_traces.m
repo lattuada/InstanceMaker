@@ -51,7 +51,7 @@ for ii = 1:size (map, 1)
   endfor
 endfor
 
-output_dir = "tracce_vere";
+output_dir = "tracce_cineca";
 
 for ii = 1:rows
   for jj = 1:cols
