@@ -3,6 +3,7 @@ close all hidden
 clc
 
 directory = "/Users/eugenio/Desktop/fair-tasks/AWS";
+doShuffling = true;
 
 map = rs = shuffle = cell (5, 1);
 nm = nr = zeros (5, 1);
@@ -44,7 +45,15 @@ for ii = 1:numel (map)
   finalMaxRs(ii) = max (finalRs{ii});
 endfor
 
-output_dir = "tracce_amazon";
+if (doShuffling)
+  rand ("seed", 17);
+  for ii = 1:numel (finalMap)
+    finalMap{ii} = finalMap{ii}(randperm (numel (finalMap{ii})));
+    finalRs{ii} = finalRs{ii}(randperm (numel (finalRs{ii})));
+  endfor
+endif
+
+output_dir = "tracce_amazon_shuffle";
 
 for ii = 1:numel (map)
   class = num2str (ii);

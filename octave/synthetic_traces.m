@@ -3,6 +3,7 @@ close all hidden
 clc
 
 directory = "/Users/eugenio/Desktop/fair-tasks/Fair_Scheduler_";
+doShuffling = true;
 
 map = rs = shuffle = cell (5, 2);
 nm = nr = zeros (5, 2);
@@ -77,7 +78,19 @@ for ii = 1:size (map, 1)
   endfor
 endfor
 
-output_dir = "nuove_tracce";
+if (doShuffling)
+  rand ("seed", 17);
+  for ii = 1:size (finalMap, 1)
+    for jj = 1:size (finalMap, 2)
+      for kk = 1:size (finalMap, 3)
+        finalMap{ii, jj, kk} = finalMap{ii, jj, kk}(randperm (numel (finalMap{ii, jj, kk})));
+        finalRs{ii, jj, kk} = finalRs{ii, jj, kk}(randperm (numel (finalRs{ii, jj, kk})));
+      endfor
+    endfor
+  endfor
+endif
+
+output_dir = "nuove_tracce_shuffle";
 vms = {"medium", "large", "xlarge"};
 
 for ii = 1:rows
