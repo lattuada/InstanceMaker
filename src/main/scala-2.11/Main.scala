@@ -1,19 +1,28 @@
 import java.io.File
 
 object Main {
-  lazy val USAGE = "InstanceMaker directory classes concurrency"
+  private lazy val USAGE =
+    """InstanceMaker -d directory classes concurrency
+      |InstanceMaker -s directory concurrency cores""".stripMargin
+
+  private lazy val ERROR = "error: unrecognized flag"
 
   def main(args: Array[String]): Unit = {
-    val test = args lengthCompare 3
+    val test = args lengthCompare 4
     if (test != 0) Console.err println USAGE
     else handleInputArguments(args)
   }
 
-  private def handleInputArguments(args: Array[String]) = {
-    val inputDirectory = new File(args(0)).getAbsoluteFile
-    val numClasses = args(1).toInt
-    val hUp = args(2).toInt
-    val creator = InstanceCreator(inputDirectory, numClasses, hUp)
-    creator.create()
+  private def handleInputArguments(args: Array[String]): Unit = {
+    val inputDirectory = new File(args(1)).getAbsoluteFile
+    val second = args(2).toInt
+    val third = args(3).toInt
+    args.head match {
+      case "-d" => InstanceCreator(inputDirectory, second, third).create()
+      case "-s" => SolutionCreator(inputDirectory, second, third).create()
+      case _ =>
+        Console.err println ERROR
+        Console.err println USAGE
+    }
   }
 }
