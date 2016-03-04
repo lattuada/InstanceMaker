@@ -3,7 +3,7 @@ import java.io.File
 object Main {
   private lazy val USAGE =
     """InstanceMaker -d directory classes concurrency
-      |InstanceMaker -s directory concurrency cores""".stripMargin
+      |InstanceMaker -s directory concurrency vms""".stripMargin
 
   private lazy val ERROR = "error: unrecognized flag"
 
