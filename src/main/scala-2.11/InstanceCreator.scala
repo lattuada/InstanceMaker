@@ -8,7 +8,7 @@ import it.polimi.diceH2020.SPACE4Cloud.shared.inputData._
 import scala.collection.convert.WrapAsJava
 
 class InstanceCreator(directories: Map[String, File], sets: Iterator[Set[String]],
-                      hUp: Int) extends QueryData(directories, hUp) {
+                      hUp: Int) extends QueryData(directories, hUp) with FileUtilities {
   private lazy val data = sets map {
     set =>
       val instanceId = set + s"h$hUp" mkString "_"

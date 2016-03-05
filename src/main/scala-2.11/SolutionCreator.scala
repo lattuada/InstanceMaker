@@ -6,13 +6,13 @@ import it.polimi.diceH2020.SPACE4Cloud.shared.solution.{Solution, SolutionPerJob
 import scala.collection.convert.WrapAsScala
 
 class SolutionCreator(directories: Map[String, File], hUp: Int, vms: Int)
-  extends QueryData(directories, hUp) {
+  extends QueryData(directories, hUp) with FileUtilities {
 
   private val coresPerVm = 20
 
   private lazy val data = directories.keys map {
     query =>
-      val instanceId = s"jmt_${query}_h${hUp}_gamma$vms"
+      val instanceId = s"jmt_${query}_h${hUp}_vm$vms"
 
       val solution = new Solution(instanceId)
       solution setGamma vms * coresPerVm
@@ -27,7 +27,7 @@ class SolutionCreator(directories: Map[String, File], hUp: Int, vms: Int)
       solutionPerJob setNumCores coresPerVm
       solutionPerJob setNumberVM vms
       solutionPerJob setNumberUsers hUp
-      solutionPerJob setDuration Double.NegativeInfinity
+      solutionPerJob setDuration Double.NaN
 
       solution setSolutionPerJob solutionPerJob
 
