@@ -8,10 +8,12 @@ import it.polimi.diceH2020.SPACE4Cloud.shared.inputData._
 import scala.collection.convert.WrapAsJava
 
 class InstanceCreator(directories: Map[String, File], sets: Iterator[Set[String]],
-                      hUp: Int) extends QueryData(directories, hUp) with FileUtilities {
+                      hUp: Int, deadline: Double)
+  extends QueryData(directories, hUp, deadline) with FileUtilities {
+
   private lazy val data = sets map {
     set =>
-      val instanceId = set + s"h$hUp" mkString "_"
+      val instanceId = set.toSeq :+ s"h$hUp" :+ s"D$deadline" mkString "_"
 
       val instance = InstanceDataGenerator.build()
       instance setId instanceId
@@ -61,8 +63,8 @@ class InstanceCreator(directories: Map[String, File], sets: Iterator[Set[String]
 }
 
 object InstanceCreator extends DirectoryHelper {
-  def apply(directory: File, numClasses: Int, hUp: Int) = {
+  def apply(directory: File, numClasses: Int, hUp: Int, deadline: Double) = {
     val directoryMap = retrieveDirectoryMap(directory)
-    new InstanceCreator(directoryMap, directoryMap.keySet subsets numClasses, hUp)
+    new InstanceCreator(directoryMap, directoryMap.keySet subsets numClasses, hUp, deadline)
   }
 }

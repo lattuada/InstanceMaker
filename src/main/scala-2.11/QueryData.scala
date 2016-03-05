@@ -6,14 +6,14 @@ import scala.collection.convert.WrapAsJava
 import scala.io.Source
 import scala.util.Random
 
-abstract class QueryData(directories: Map[String, File], hUp: Int) {
+abstract class QueryData(directories: Map[String, File], hUp: Int, deadline: Double) {
   protected lazy val jobClasses = directories map {
     case (id, directory) =>
       val job = new JobClass
       job setId id.toInt
       job setThink 1e4
       job setJob_penalty (Random nextInt 21) + 15
-      job setD Random.nextDouble * 2e6 + 5e5
+      job setD deadline
       job setHup hUp
       val hLow = (hUp * 0.7).round
       job setHlow hLow.toInt

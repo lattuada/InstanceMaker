@@ -5,14 +5,14 @@ import it.polimi.diceH2020.SPACE4Cloud.shared.solution.{Solution, SolutionPerJob
 
 import scala.collection.convert.WrapAsScala
 
-class SolutionCreator(directories: Map[String, File], hUp: Int, vms: Int)
-  extends QueryData(directories, hUp) with FileUtilities {
+class SolutionCreator(directories: Map[String, File], hUp: Int, vms: Int, deadline: Double)
+  extends QueryData(directories, hUp, deadline) with FileUtilities {
 
   private val coresPerVm = 20
 
   private lazy val data = directories.keys map {
     query =>
-      val instanceId = s"jmt_${query}_h${hUp}_vm$vms"
+      val instanceId = s"jmt_${query}_h${hUp}_vm${vms}_D$deadline"
 
       val solution = new Solution(instanceId)
       solution setGamma vms * coresPerVm
@@ -47,8 +47,8 @@ class SolutionCreator(directories: Map[String, File], hUp: Int, vms: Int)
 }
 
 object SolutionCreator extends DirectoryHelper {
-  def apply(directory: File, hUp: Int, cores: Int): SolutionCreator = {
+  def apply(directory: File, hUp: Int, cores: Int, deadline: Double): SolutionCreator = {
     val directoryMap = retrieveDirectoryMap(directory)
-    new SolutionCreator(directoryMap, hUp, cores)
+    new SolutionCreator(directoryMap, hUp, cores, deadline)
   }
 }
