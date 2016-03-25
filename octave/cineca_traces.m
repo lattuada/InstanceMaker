@@ -2,22 +2,27 @@ clear
 close all hidden
 clc
 
-directory = "/Users/eugenio/Desktop/fair-tasks/Fair_Scheduler_";
-doShuffling = true;
+directory = "/Users/eugenio/Desktop/capacity-tasks";
+dataset = 750;
+doShuffling = false;
 
-map = rs = shuffle = cell (5, 2);
-nm = nr = zeros (5, 2);
+data_string = num2str (dataset);
+outdirs = glob ([directory, "/*_", data_string]);
 
-for ii = 1:size (map, 1)
-  jj = 1;
-  for dir = glob ([directory, num2str(ii), "/R*"])'
-    dir = dir{1};
+num = length (outdirs);
+map = rs = shuffle = cell (num, 5);
+nm = nr = zeros (num, 5);
+
+for ii = 1:num
+  dirs = glob ([outdirs{ii}, "/R*"]);
+  for jj = 1:length (dirs)
+    dir = dirs{jj};
     aux = load ([dir, "/numTasks.txt"]);
     nm(ii, jj) = aux(1);
     nr(ii, jj) = aux(2);
     map{ii, jj} = load ([dir, "/Map 1.txt"]);
     rs{ii, jj} = load ([dir, "/rs 2.txt"]);
-    shuffle{ii, jj++} = load ([dir, "/Shuffle 2.txt"]);
+    shuffle{ii, jj} = load ([dir, "/Shuffle 2.txt"]);
   endfor
 endfor
 
@@ -62,7 +67,7 @@ if (doShuffling)
   endfor
 endif
 
-output_dir = "tracce_cineca_shuffle";
+output_dir = ["/Users/eugenio/Desktop/capacity-tasks/d", data_string];
 
 for ii = 1:rows
   for jj = 1:cols
