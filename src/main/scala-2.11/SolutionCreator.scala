@@ -22,22 +22,22 @@ import scala.collection.convert.WrapAsScala
 class SolutionCreator(directories: Map[String, File], hUp: Int, vms: Int, deadline: Double)
   extends QueryData(directories, hUp, deadline) with FileUtilities {
 
-  private val coresPerVm = 20
-
   private lazy val data = directories.keys map {
     query =>
       val instanceId = s"jmt_${query}_h${hUp}_vm${vms}_D$deadline"
 
       val solution = new Solution(instanceId)
-      solution setGamma vms * coresPerVm
+      solution setGamma vms * hUp * 50
 
       val solutionPerJob = new SolutionPerJob()
       solutionPerJob setJob { jobClasses(query) }
       val (vmId, (profile, _)) = jobProfiles(query).head
       solutionPerJob setProfile profile
-      val vm = WrapAsScala iterableAsScalaIterable
+      val maybeVM = WrapAsScala iterableAsScalaIterable
         vmTypes(query.toInt) find { _.getId equals vmId.getTypeVM }
-      solutionPerJob setTypeVMselected vm.get
+      val typeVM = maybeVM.get
+      solutionPerJob setTypeVMselected typeVM
+      val coresPerVm = profile.getCM / 2
       solutionPerJob setNumCores coresPerVm
       solutionPerJob setNumberVM vms
       solutionPerJob setNumberUsers hUp

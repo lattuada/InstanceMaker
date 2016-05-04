@@ -41,7 +41,7 @@ class InstanceCreator(directories: Map[String, File], sets: Iterator[Set[String]
       val integerSet = set map { _.toInt.asInstanceOf[java.lang.Integer] }
       val vmMap = vmTypes filterKeys integerSet
       instance setMapTypeVMs {
-        WrapAsJava mapAsJavaMap vmMap.toMap
+        WrapAsJava mapAsJavaMap vmMap
       }
 
       val couples = (Seq[(TypeVMJobClassKey, (Profile, String))]()
