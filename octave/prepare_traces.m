@@ -17,12 +17,11 @@
 ##
 ## Retrieve task and profile data from @var{directory} and set up traces in the
 ## working directory, taking out outliers.
-## Parameter @var{vm} should be the name of a VM type present in the SPACE4Cloud WS
-## dartabase.
+## The parameter @var{vm} should be the name of a VM type present in the SPACE4Cloud WS
+## database.
 ## If @var{reorder} is true, then randomly shuffle task durations in the output files.
 ## Please note that this function works only for simple MapReduce jobs.
 ##
-## @seealso{}
 ## @end deftypefn
 
 function prepare_traces (directory, vm, reorder)
