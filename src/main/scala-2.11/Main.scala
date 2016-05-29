@@ -38,6 +38,7 @@ object Main {
       case _ =>
         Console.err println ERROR
         Console.err println USAGE
+        System exit 1
     }
   }
 }
