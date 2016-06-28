@@ -17,11 +17,6 @@
 root=${1:?"error: input directory missing"}
 
 if ls "$root" > /dev/null 2>&1; then
-  find "$root" -name data -type d | while read data; do
-    dir="$(dirname "$data")"
-    mv "$data"/* "$dir"
-    rmdir "$data"
-  done
   find "$root" -name tasks.txt | while read filename; do
     split_tasks.sh "$filename"
   done
