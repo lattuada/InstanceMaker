@@ -1,4 +1,4 @@
-/* Copyright 2015-2016 Eugenio Gianniti
+/* Copyright 2015-2017 Eugenio Gianniti
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,12 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import java.io.File
+import scala.util.matching.Regex
 
-trait DirectoryHelper {
-  protected def retrieveDirectoryMap(directory: File): Map[String, File] = {
-    val childDirectories = directory.listFiles filter {
-      _.isDirectory } map { x => x.getName -> x }
-    childDirectories.toMap
-  }
+object ParameterRegex {
+  val avgMap: Regex = """Avg Map: (\d+)""".r
+  val maxMap: Regex = """Max Map: (\d+)""".r
+  val avgReduce: Regex = """Avg Reduce: (\d+)""".r
+  val maxReduce: Regex = """Max Reduce: (\d+)""".r
+  val avgShuffle: Regex = """Avg Shuffle: (\d+)""".r
+  val maxShuffle: Regex = """Max Shuffle: (\d+)""".r
 }

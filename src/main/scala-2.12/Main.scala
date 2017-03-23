@@ -1,4 +1,4 @@
-/* Copyright 2015-2016 Eugenio Gianniti
+/* Copyright 2015-2017 Eugenio Gianniti
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,29 +15,29 @@
 import java.io.File
 
 object Main {
-  private lazy val USAGE =
-    """InstanceMaker -d directory classes concurrency deadline
-      |InstanceMaker -s directory concurrency vms deadline""".stripMargin
+  private lazy val USAGE = """InstanceMaker directory classes concurrency deadline""".stripMargin
 
-  private lazy val ERROR = "error: unrecognized flag"
+  private lazy val ERROR = "error: wrong input arguments"
 
   def main(args: Array[String]): Unit = {
-    val test = args lengthCompare 5
-    if (test != 0) Console.err println USAGE
+    val test = args lengthCompare 4
+    if (test != 0) {
+      Console.err println USAGE
+      System exit 2
+    }
     else handleInputArguments(args)
   }
 
   private def handleInputArguments(args: Array[String]): Unit = {
-    val inputDirectory = new File(args(1)).getAbsoluteFile
-    val second = args(2).toInt
-    val third = args(3).toInt
-    val deadline = args(4).toDouble
-    args.head match {
-      case "-d" => InstanceCreator(inputDirectory, second, third, deadline).create()
-      case "-s" => SolutionCreator(inputDirectory, second, third, deadline).create()
-      case _ =>
+    try {
+      val inputDirectory = new File(args(0)).getAbsoluteFile
+      val second = args(1).toInt
+      val third = args(2).toInt
+      val deadline = args(3).toDouble
+      InstanceCreator(inputDirectory, second, third, deadline).create()
+    } catch {
+      case _: NumberFormatException =>
         Console.err println ERROR
-        Console.err println USAGE
         System exit 1
     }
   }

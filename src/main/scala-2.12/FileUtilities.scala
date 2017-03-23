@@ -1,4 +1,4 @@
-/* Copyright 2015-2016 Eugenio Gianniti
+/* Copyright 2015-2017 Eugenio Gianniti
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,21 +17,22 @@ import java.io.{BufferedWriter, File, FileWriter}
 import scala.io.Source
 
 trait FileUtilities {
-  protected def fileCopyingHelper(input: File, output: File) = {
-    val writer = new BufferedWriter(new FileWriter(output))
-    Source.fromFile(input).getLines() filterNot { _ contains "#" } map {
-      _.trim } filterNot { _.isEmpty } foreach { line => writer write s"$line\n" }
-    writer.close()
+  protected def fileCopyingHelper(input: File, output: File): Unit = {
+    resource managed { new BufferedWriter(new FileWriter(output)) } foreach {
+      writer =>
+        Source.fromFile(input).getLines() filterNot { _ contains "#" } map {
+          _.trim } filterNot { _.isEmpty } foreach { line => writer write s"$line\n" }
+    }
   }
 
-  protected def fileWritingHelper(content: String, output: File) = {
-    val writer = new BufferedWriter(new FileWriter(output))
-    writer write content
-    writer.close()
+  protected def fileWritingHelper(content: String, output: File): Unit = {
+    resource managed { new BufferedWriter(new FileWriter(output)) } foreach {
+      writer =>
+        writer write content
+    }
   }
 
-  protected def copyTracesFiles(id: String, inputDirectory: File,
-                                outputDirectory: File) = {
+  protected def copyTracesFiles(id: String, inputDirectory: File, outputDirectory: File): Unit = {
     val jobId = inputDirectory.getName
     inputDirectory.listFiles filter { _.isDirectory } foreach {
       vmDirectory =>

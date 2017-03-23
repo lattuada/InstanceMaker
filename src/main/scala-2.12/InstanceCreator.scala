@@ -1,4 +1,4 @@
-/* Copyright 2015-2016 Eugenio Gianniti
+/* Copyright 2015-2017 Eugenio Gianniti
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,9 @@ import java.io.File
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.module.SimpleModule
 import it.polimi.diceH2020.SPACE4Cloud.shared.generators.InstanceDataGenerator
-import it.polimi.diceH2020.SPACE4Cloud.shared.inputData._
+import it.polimi.diceH2020.SPACE4Cloud.shared.inputData.{Profile, TypeVMJobClassKey}
 
-import scala.collection.convert.WrapAsJava
+import scala.collection.JavaConverters
 
 class InstanceCreator(directories: Map[String, File], sets: Iterator[Set[String]],
                       hUp: Int, deadline: Double)
@@ -35,13 +35,13 @@ class InstanceCreator(directories: Map[String, File], sets: Iterator[Set[String]
 
       val classList = set map jobClasses
       instance setLstClass {
-        WrapAsJava seqAsJavaList classList.toSeq
+        JavaConverters seqAsJavaList classList.toSeq
       }
 
       val integerSet = set map { _.toInt.asInstanceOf[java.lang.Integer] }
       val vmMap = vmTypes filterKeys integerSet
       instance setMapTypeVMs {
-        WrapAsJava mapAsJavaMap vmMap
+        JavaConverters mapAsJavaMap vmMap
       }
 
       val couples = (Seq[(TypeVMJobClassKey, (Profile, String))]()
@@ -55,7 +55,7 @@ class InstanceCreator(directories: Map[String, File], sets: Iterator[Set[String]
       }
       val profileMap = couples map { case (key, (profile, _)) => key -> profile }
       instance setMapProfiles {
-        WrapAsJava mapAsJavaMap profileMap
+        JavaConverters mapAsJavaMap profileMap
       }
 
       (instanceId, set, instance)
@@ -77,7 +77,7 @@ class InstanceCreator(directories: Map[String, File], sets: Iterator[Set[String]
 }
 
 object InstanceCreator extends DirectoryHelper {
-  def apply(directory: File, numClasses: Int, hUp: Int, deadline: Double) = {
+  def apply(directory: File, numClasses: Int, hUp: Int, deadline: Double): InstanceCreator = {
     val directoryMap = retrieveDirectoryMap(directory)
     new InstanceCreator(directoryMap, directoryMap.keySet subsets numClasses, hUp, deadline)
   }

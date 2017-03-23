@@ -1,4 +1,4 @@
-/* Copyright 2015-2016 Eugenio Gianniti
+/* Copyright 2015-2017 Eugenio Gianniti
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import java.io.File
 
-object ParameterRegex {
-  val avgMap = """Avg Map: (\d+)""".r
-  val maxMap = """Max Map: (\d+)""".r
-  val avgReduce = """Avg Reduce: (\d+)""".r
-  val maxReduce = """Max Reduce: (\d+)""".r
-  val avgShuffle = """Avg Shuffle: (\d+)""".r
-  val maxShuffle = """Max Shuffle: (\d+)""".r
+trait DirectoryHelper {
+  protected def retrieveDirectoryMap(directory: File): Map[String, File] = {
+    val childDirectories = directory.listFiles filter {
+      _.isDirectory } map { x => x.getName -> x }
+    childDirectories.toMap
+  }
 }

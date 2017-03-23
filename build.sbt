@@ -1,8 +1,8 @@
 import sbtassembly.AssemblyPlugin.defaultShellScript
 
 lazy val commonSettings = Seq(
-  version := "0.0.1",
-  scalaVersion := "2.11.8"
+  version := "0.0.2",
+  scalaVersion := "2.12.1"
 )
 
 lazy val root = (project in file(".")).
@@ -13,7 +13,8 @@ lazy val root = (project in file(".")).
       "Deib Polimi" at "https://github.com/deib-polimi/deib-polimi-mvn-repo/raw/master/releases",
       "Deib Polimi Snapshots" at "https://github.com/deib-polimi/deib-polimi-mvn-repo/raw/master/snapshots"
     ),
-    libraryDependencies += "it.polimi.diceH2020" % "SPACE4Cloud-shared" % "0.2.3-SNAPSHOT"
+    libraryDependencies += "it.polimi.diceH2020" % "SPACE4Cloud-shared" % "0.2.3-SNAPSHOT",
+    libraryDependencies += "com.jsuereth" %% "scala-arm" % "2.0"
   )
 
 assemblyOption in assembly := (assemblyOption in assembly).value.copy(prependShellScript = Some(defaultShellScript))
