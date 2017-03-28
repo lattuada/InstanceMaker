@@ -37,13 +37,14 @@ trait FileUtilities {
     inputDirectory.listFiles filter { _.isDirectory } foreach {
       vmDirectory =>
         val vmId = vmDirectory.getName
+        val (_, provider) = VirtualMachineFeatures(vmId)
 
-        val mapFileName = s"${id}MapJ$jobId$vmId.txt"
+        val mapFileName = s"${id}MapJ$jobId$provider$vmId.txt"
         val originalMapFile = new File(vmDirectory, "map.txt")
         val copiedMapFile = new File(outputDirectory, mapFileName)
         fileCopyingHelper(originalMapFile, copiedMapFile)
 
-        val rsFileName = s"${id}RSJ$jobId$vmId.txt"
+        val rsFileName = s"${id}RSJ$jobId$provider$vmId.txt"
         val originalRsFile = new File(vmDirectory, "rs.txt")
         val copiedRsFile = new File(outputDirectory, rsFileName)
         fileCopyingHelper(originalRsFile, copiedRsFile)

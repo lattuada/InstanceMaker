@@ -13,88 +13,81 @@
  * limitations under the License.
  */
 import java.io.File
-import java.util
 
-import it.polimi.diceH2020.SPACE4Cloud.shared.inputData.{JobClass, Profile, TypeVM, TypeVMJobClassKey}
+import it.polimi.diceH2020.SPACE4Cloud.shared.inputDataMultiProvider.{ClassParameters, JobProfile, PublicCloudParameters}
 
-import scala.collection.JavaConverters
 import scala.io.Source
 import scala.util.Random
 
 abstract class QueryData(directories: Map[String, File], hUp: Int, deadline: Double) {
-  protected lazy val jobClasses: Map[String, JobClass] = directories map {
-    case (id, directory) =>
-      val job = new JobClass
-      job setId id.toInt
-      job setThink 1e4
-      job setJob_penalty (Random nextInt 21) + 15
-      job setD deadline
-      job setHup hUp
+  protected lazy val jobClasses: Map[String, ClassParameters] = directories map {
+    case (id, _) =>
+      val jobClass = new ClassParameters
+      jobClass setThink 1e4
+      jobClass setPenalty Random.nextDouble * 21 + 15
+      jobClass setD deadline
+      jobClass setHup hUp
       val hLow = (hUp * 0.7).round
-      job setHlow hLow.toInt
-      id -> job
+      jobClass setHlow hLow.toInt
+      jobClass setM 1.0
+      jobClass setV 0.0
+      id -> jobClass
   }
 
-  private val vmDirectories = directories map {
+  private val vmDirectories: Map[String, Array[File]] = directories map {
     case (id, directory) =>
       val types = directory.listFiles filter { _.isDirectory }
       id -> types
   }
 
-  protected lazy val vmTypes: Map[Integer, util.List[TypeVM]] = vmDirectories map {
-    case (id, types) =>
-      val typeList = types map {
-        vm =>
-          val vmType = new TypeVM
-          vmType setId vm.getName
-          vmType setEta Random.nextDouble * 0.3 + 0.1
-          vmType setR (Random nextInt 31) + 10
-          vmType
-      }
-      id.toInt.asInstanceOf[java.lang.Integer] -> {
-        JavaConverters seqAsJavaList typeList
-      }
+  protected lazy val publicCloud: Map[String, Map[String, Map[String, PublicCloudParameters]]] = {
+    vmDirectories map {
+      case (id, types) =>
+        val parametersMap = types map {
+          vm =>
+            val parameters = new PublicCloudParameters
+            parameters setEta Random.nextDouble * 0.3 + 0.1
+            parameters setR (Random nextInt 31) + 10
+
+            val vmId = vm.getName
+            val (_, provider) = VirtualMachineFeatures(vmId)
+            provider -> Map(vm.getName -> parameters)
+        }
+        id -> parametersMap.toMap
+    }
   }
 
-  protected lazy val jobProfiles: Map[String, Array[(TypeVMJobClassKey, (Profile, String))]] =
+  protected lazy val jobProfiles: Map[String, Map[String, Map[String, JobProfile]]] = {
     vmDirectories map {
       case (id, types) =>
         val profiles = types map {
           vm =>
             val vmId = vm.getName
-            val key = new TypeVMJobClassKey(id.toInt, vmId)
-            val profile = new Profile
+            val (_, provider) = VirtualMachineFeatures(vmId)
 
-            val (containers, provider) = vmId match {
-              case name if name contains "medium" => 2 -> "Amazon"
-              case name if name contains "2xlarge" => 16 -> "Amazon"
-              case name if name contains "5xlarge" => 40 -> "Cineca"
-              case name if name contains "xlarge" => 8 -> "Amazon"
-              case name if name contains "large" => 4 -> "Amazon"
-              case _ => throw new RuntimeException("error: unrecognized VM type")
-            }
-            profile setCM containers
-            profile setCR containers
-            profile setSH1max 0.0
+            val profile = new JobProfile
+            profile put ("sh1max", 0.0)
 
-            Source.fromFile(new File(vm, "numTasks.txt")).getLines() foreach {
-              case TaskNumberRegex.mapNumber(value) => profile setNM value.toInt
-              case TaskNumberRegex.rsNumber(value) => profile setNR value.toInt
+            Source.fromFile (new File (vm, "numTasks.txt")).getLines () foreach {
+              case TaskNumberRegex.mapNumber (value) => profile put ("nm", value.toDouble)
+              case TaskNumberRegex.rsNumber (value) => profile put ("nr", value.toDouble)
               case _ =>
             }
 
-            Source.fromFile(new File(vm, "param.txt")).getLines() foreach {
-              case ParameterRegex.avgMap(value) => profile setMavg value.toDouble
-              case ParameterRegex.maxMap(value) => profile setMmax value.toDouble
-              case ParameterRegex.avgReduce(value) => profile setRavg value.toDouble
-              case ParameterRegex.maxReduce(value) => profile setRmax value.toDouble
-              case ParameterRegex.avgShuffle(value) => profile setSHtypavg value.toDouble
-              case ParameterRegex.maxShuffle(value) => profile setSHtypmax value.toDouble
+            Source.fromFile (new File (vm, "param.txt")).getLines () foreach {
+              case ParameterRegex.avgMap (value) => profile put ("mavg", value.toDouble)
+              case ParameterRegex.maxMap (value) => profile put ("mmax", value.toDouble)
+              case ParameterRegex.avgReduce (value) => profile put ("ravg", value.toDouble)
+              case ParameterRegex.maxReduce (value) => profile put ("rmax", value.toDouble)
+              case ParameterRegex.avgShuffle (value) => profile put ("shtypavg", value.toDouble)
+              case ParameterRegex.maxShuffle (value) => profile put ("shtypmax", value.toDouble)
               case _ =>
             }
 
-            key -> (profile, provider)
+            provider -> Map(vmId -> profile)
         }
-        id -> profiles
+
+        id -> profiles.toMap
     }
+  }
 }

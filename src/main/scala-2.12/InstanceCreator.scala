@@ -15,9 +15,8 @@
 import java.io.File
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.module.SimpleModule
-import it.polimi.diceH2020.SPACE4Cloud.shared.generators.InstanceDataGenerator
-import it.polimi.diceH2020.SPACE4Cloud.shared.inputData.{Profile, TypeVMJobClassKey}
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
+import it.polimi.diceH2020.SPACE4Cloud.shared.inputDataMultiProvider.{ClassParametersMap, InstanceDataMultiProvider, JobProfilesMap, PublicCloudParametersMap}
 
 import scala.collection.JavaConverters
 
@@ -29,34 +28,24 @@ class InstanceCreator(directories: Map[String, File], sets: Iterator[Set[String]
     set =>
       val instanceId = set.toSeq :+ s"h$hUp" :+ s"D$deadline" mkString "_"
 
-      val instance = InstanceDataGenerator.build()
+      val instance = new InstanceDataMultiProvider
       instance setId instanceId
-      instance setGamma set.size * hUp * 50
 
-      val classList = set map jobClasses
-      instance setLstClass {
-        JavaConverters seqAsJavaList classList.toSeq
-      }
+      val classMap = jobClasses filterKeys set
+      val parametersMap = new ClassParametersMap (
+        JavaConverters mapAsJavaMap classMap
+      )
+      instance setMapClassParameters parametersMap
 
-      val integerSet = set map { _.toInt.asInstanceOf[java.lang.Integer] }
-      val vmMap = vmTypes filterKeys integerSet
-      instance setMapTypeVMs {
-        JavaConverters mapAsJavaMap vmMap
-      }
+      val filteredProfiles = jobProfiles filterKeys set
+      val javaProfiles = NestedJavaConverters threeNestedMaps filteredProfiles
+      val jobProfilesMap = new JobProfilesMap (javaProfiles)
+      instance setMapJobProfiles jobProfilesMap
 
-      val couples = (Seq[(TypeVMJobClassKey, (Profile, String))]()
-        /: { set map jobProfiles })( _ ++ _ ).toMap
-      val providers = couples.map{ case (_, (_, provider)) => provider }.toSet
-      instance setProvider {
-        providers.size match {
-          case 1 => providers.head
-          case _ => throw new RuntimeException("error: more than one provider in the same instance")
-        }
-      }
-      val profileMap = couples map { case (key, (profile, _)) => key -> profile }
-      instance setMapProfiles {
-        JavaConverters mapAsJavaMap profileMap
-      }
+      val filteredPublicCloud = publicCloud filterKeys set
+      val javaPublicCloud = NestedJavaConverters threeNestedMaps filteredPublicCloud
+      val publicCloudParametersMap = new PublicCloudParametersMap (javaPublicCloud)
+      instance setMapPublicCloudParameters publicCloudParametersMap
 
       (instanceId, set, instance)
   }
@@ -65,13 +54,18 @@ class InstanceCreator(directories: Map[String, File], sets: Iterator[Set[String]
     case (id, classes, instance) =>
       val outputDirectory = new File(id)
       outputDirectory.mkdir()
-      classes map directories foreach { copyTracesFiles(id, _, outputDirectory) }
-      val jsonFile = new File(outputDirectory, s"$id.json")
+
+      classes map directories foreach {
+        copyTracesFiles(id, _, outputDirectory)
+      }
+
       val mapper = new ObjectMapper
-      val module = new SimpleModule
-      module addKeyDeserializer (classOf[TypeVMJobClassKey], TypeVMJobClassKey.getDeserializer)
+      val module = new Jdk8Module
       mapper registerModule module
-      val serialized = mapper writeValueAsString instance
+
+      val jsonWriter = mapper.writerWithDefaultPrettyPrinter
+      val serialized = jsonWriter writeValueAsString instance
+      val jsonFile = new File(outputDirectory, s"$id.json")
       fileWritingHelper(serialized, jsonFile)
   }
 }
