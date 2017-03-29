@@ -34,7 +34,8 @@ object Main {
       val second = args(1).toInt
       val third = args(2).toInt
       val deadline = args(3).toDouble
-      InstanceCreator(inputDirectory, second, third, deadline).create()
+      val creator = InstanceCreator forHadoop (inputDirectory, second, third, deadline)
+      creator.create()
     } catch {
       case _: NumberFormatException =>
         Console.err println ERROR

@@ -19,8 +19,9 @@ import it.polimi.diceH2020.SPACE4Cloud.shared.inputDataMultiProvider.{ClassParam
 import scala.io.Source
 import scala.util.Random
 
-abstract class QueryData(directories: Map[String, File], hUp: Int, deadline: Double) {
-  protected lazy val jobClasses: Map[String, ClassParameters] = directories map {
+sealed abstract class QueryData(directories: Map[String, File], hUp: Int, deadline: Double) extends JobData {
+
+  lazy val jobClasses: Map[String, ClassParameters] = directories map {
     case (id, _) =>
       val jobClass = new ClassParameters
       jobClass setThink 1e4
@@ -34,13 +35,13 @@ abstract class QueryData(directories: Map[String, File], hUp: Int, deadline: Dou
       id -> jobClass
   }
 
-  private val vmDirectories: Map[String, Array[File]] = directories map {
+  lazy val vmDirectories: Map[String, Array[File]] = directories map {
     case (id, directory) =>
       val types = directory.listFiles filter { _.isDirectory }
       id -> types
   }
 
-  protected lazy val publicCloud: Map[String, Map[String, Map[String, PublicCloudParameters]]] = {
+  lazy val publicCloud: Map[String, Map[String, Map[String, PublicCloudParameters]]] = {
     vmDirectories map {
       case (id, types) =>
         val parametersMap = types map {
@@ -58,7 +59,20 @@ abstract class QueryData(directories: Map[String, File], hUp: Int, deadline: Dou
     }
   }
 
-  protected lazy val jobProfiles: Map[String, Map[String, Map[String, JobProfile]]] = {
+  protected def collectSubMaps [T] (nestedSeq: Traversable[(String, Map[String, T])]): Map[String, Map[String, T]] = {
+    nestedSeq groupBy { _._1 } map {
+      case (key, xs) =>
+        val completeMap = xs map { _._2 } reduce { _ ++ _ }
+        key -> completeMap
+    }
+  }
+}
+
+
+class HadoopQueryData(directories: Map[String, File], hUp: Int, deadline: Double)
+  extends QueryData(directories: Map[String, File], hUp: Int, deadline: Double) {
+
+  lazy val jobProfiles: Map[String, Map[String, Map[String, JobProfile]]] = {
     vmDirectories map {
       case (id, types) =>
         val profiles = types map {
@@ -89,14 +103,6 @@ abstract class QueryData(directories: Map[String, File], hUp: Int, deadline: Dou
         }
 
         id -> collectSubMaps(profiles)
-    }
-  }
-
-  private def collectSubMaps [T] (nestedSeq: Traversable[(String, Map[String, T])]): Map[String, Map[String, T]] = {
-    nestedSeq groupBy { _._1 } map {
-      case (key, xs) =>
-        val completeMap = xs map { _._2 } reduce { _ ++ _ }
-        key -> completeMap
     }
   }
 }

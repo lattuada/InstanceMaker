@@ -20,9 +20,8 @@ import it.polimi.diceH2020.SPACE4Cloud.shared.inputDataMultiProvider.{ClassParam
 
 import scala.collection.JavaConverters
 
-class InstanceCreator(directories: Map[String, File], sets: Iterator[Set[String]],
-                      hUp: Int, deadline: Double)
-  extends QueryData(directories, hUp, deadline) with FileUtilities {
+sealed abstract class InstanceCreator(directories: Map[String, File], sets: Iterator[Set[String]],
+                                      hUp: Int, deadline: Double, private val jobData: JobData) extends FileUtilities {
 
   private lazy val data = sets map {
     set =>
@@ -31,18 +30,18 @@ class InstanceCreator(directories: Map[String, File], sets: Iterator[Set[String]
       val instance = new InstanceDataMultiProvider
       instance setId instanceId
 
-      val classMap = jobClasses filterKeys set
+      val classMap = jobData.jobClasses filterKeys set
       val parametersMap = new ClassParametersMap (
         JavaConverters mapAsJavaMap classMap
       )
       instance setMapClassParameters parametersMap
 
-      val filteredProfiles = jobProfiles filterKeys set
+      val filteredProfiles = jobData.jobProfiles filterKeys set
       val javaProfiles = NestedJavaConverters threeNestedMaps filteredProfiles
       val jobProfilesMap = new JobProfilesMap (javaProfiles)
       instance setMapJobProfiles jobProfilesMap
 
-      val filteredPublicCloud = publicCloud filterKeys set
+      val filteredPublicCloud = jobData.publicCloud filterKeys set
       val javaPublicCloud = NestedJavaConverters threeNestedMaps filteredPublicCloud
       val publicCloudParametersMap = new PublicCloudParametersMap (javaPublicCloud)
       instance setMapPublicCloudParameters publicCloudParametersMap
@@ -70,9 +69,16 @@ class InstanceCreator(directories: Map[String, File], sets: Iterator[Set[String]
   }
 }
 
+
+class HadoopInstanceCreator(directories: Map[String, File], sets: Iterator[Set[String]],
+                            hUp: Int, deadline: Double, data: HadoopQueryData)
+  extends InstanceCreator(directories, sets, hUp, deadline, data) with HadoopTracesUtilities
+
+
 object InstanceCreator extends DirectoryHelper {
-  def apply(directory: File, numClasses: Int, hUp: Int, deadline: Double): InstanceCreator = {
+  def forHadoop (directory: File, numClasses: Int, hUp: Int, deadline: Double): InstanceCreator = {
     val directoryMap = retrieveDirectoryMap(directory)
-    new InstanceCreator(directoryMap, directoryMap.keySet subsets numClasses, hUp, deadline)
+    val queryData = new HadoopQueryData(directoryMap, hUp, deadline)
+    new HadoopInstanceCreator(directoryMap, directoryMap.keySet subsets numClasses, hUp, deadline, queryData)
   }
 }
