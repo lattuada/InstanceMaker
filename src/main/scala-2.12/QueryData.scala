@@ -16,6 +16,7 @@ import java.io.File
 
 import it.polimi.diceH2020.SPACE4Cloud.shared.inputDataMultiProvider.{ClassParameters, JobProfile, PublicCloudParameters}
 
+import scala.annotation.tailrec
 import scala.io.Source
 import scala.util.Random
 
@@ -99,6 +100,75 @@ class HadoopQueryData(directories: Map[String, File], hUp: Int, deadline: Double
               case _ =>
             }
 
+            provider -> Map(vmId -> profile)
+        }
+
+        id -> collectSubMaps(profiles)
+    }
+  }
+}
+
+
+class SparkQueryData(directories: Map[String, File], hUp: Int, deadline: Double)
+  extends QueryData(directories: Map[String, File], hUp: Int, deadline: Double) {
+
+  lazy val jobProfiles: Map[String, Map[String, Map[String, JobProfile]]] = {
+    vmDirectories map {
+      case (id, types) =>
+        val profiles = types map {
+          vm =>
+            // The first line contains the name of the application class
+            val csv = Source fromFile new File (vm, "summary.csv") getLines () drop 1
+
+            @tailrec
+            def parseCsv (rows: Iterator[String], headers: List[String],
+                          values: Map[String, List[Double]]): Map[String, List[Double]] = {
+              if (rows.hasNext) {
+                val line = rows next ()
+                // The first column is the applicationId, the second the completion time, which is to predict
+                val lineContent = line split "," drop 2 map { _.trim }
+
+                val nextHeaders = if (headers.isEmpty) lineContent.toList else headers
+                val nextValues = nextHeaders zip lineContent map {
+                  case (key, value) =>
+                    val previousList = values getOrElse (key, List())
+                    val nextList = if (key == value) previousList else value.toDouble :: previousList
+                    key -> nextList
+                }
+
+                parseCsv(rows, nextHeaders, nextValues.toMap)
+              }
+              else values
+            }
+
+            val content = parseCsv(csv, List(), Map())
+            val aggregateColumns = content map {
+              case (header, xs) =>
+                val aggregate = header match {
+                  case name if name contains "nTask" =>
+                    val (greatest, _) = xs groupBy identity map {
+                      case (number, occurrences) =>
+                        val count = occurrences.length
+                        number -> count
+                    } maxBy { _._2 }
+                    greatest
+
+                  case _ => xs.sum / xs.length
+                }
+                header -> aggregate
+            } filterNot {
+              case (header, _) =>
+                ( header contains "users" ) || ( header contains "nContainers" )
+            }
+
+            val profile = new JobProfile
+            aggregateColumns foreach {
+              case (header, value) =>
+                profile put (header, value)
+            }
+
+            val vmId = vm.getName
+            val (_, provider) = VirtualMachineFeatures(vmId)
             provider -> Map(vmId -> profile)
         }
 

@@ -71,8 +71,13 @@ sealed abstract class InstanceCreator(directories: Map[String, File], sets: Iter
 
 
 class HadoopInstanceCreator(directories: Map[String, File], sets: Iterator[Set[String]],
-                            hUp: Int, deadline: Double, data: HadoopQueryData)
+                            hUp: Int, deadline: Double, private val data: HadoopQueryData)
   extends InstanceCreator(directories, sets, hUp, deadline, data) with HadoopTracesUtilities
+
+
+class SparkInstanceCreator(directories: Map[String, File], sets: Iterator[Set[String]],
+                           hUp: Int, deadline: Double, private val data: SparkQueryData)
+  extends InstanceCreator(directories, sets, hUp, deadline, data) with SparkTracesUtilities
 
 
 object InstanceCreator extends DirectoryHelper {
@@ -80,5 +85,11 @@ object InstanceCreator extends DirectoryHelper {
     val directoryMap = retrieveDirectoryMap(directory)
     val queryData = new HadoopQueryData(directoryMap, hUp, deadline)
     new HadoopInstanceCreator(directoryMap, directoryMap.keySet subsets numClasses, hUp, deadline, queryData)
+  }
+
+  def forSpark (directory: File, numClasses: Int, hUp: Int, deadline: Double): InstanceCreator = {
+    val directoryMap = retrieveDirectoryMap(directory)
+    val queryData = new SparkQueryData(directoryMap, hUp, deadline)
+    new SparkInstanceCreator(directoryMap, directoryMap.keySet subsets numClasses, hUp, deadline, queryData)
   }
 }

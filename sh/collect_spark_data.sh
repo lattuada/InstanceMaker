@@ -15,12 +15,13 @@
 ## limitations under the License.
 
 root="${1?error: missing input directory}"
+vm="${2?error: missing VM type}"
 
 if ls "$root" > /dev/null 2>&1; then
   find "$root" -name summary.csv | while IFS= read -r filename; do
     dir="$(dirname "$filename")"
     outdir="${dir#$root}"
-    outdir="${outdir#/}"
+    outdir="${outdir#/}/$vm"
     mkdir -p "$outdir"
     cp "$filename" "$outdir"
   done
@@ -29,7 +30,7 @@ if ls "$root" > /dev/null 2>&1; then
     dir="$(dirname "$filename")"
     upperdir="$(dirname "$dir")"
     outdir="${upperdir#$root}"
-    outdir="${outdir#/}"
+    outdir="${outdir#/}/$vm"
     base="$(basename "$filename")"
     base="${base%.template}"
     cp "$filename" "$outdir/$base"

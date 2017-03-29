@@ -15,12 +15,16 @@
 import java.io.File
 
 object Main {
-  private lazy val USAGE = """InstanceMaker directory classes concurrency deadline""".stripMargin
+  private lazy val USAGE =
+    """InstanceMaker -m|-s directory classes concurrency deadline
+      |  -m, --mapreduce: process Hadoop traces with simple MapReduce jobs
+      |  -s, --spark: process Spark traces
+    """.stripMargin
 
   private lazy val ERROR = "error: wrong input arguments"
 
   def main(args: Array[String]): Unit = {
-    val test = args lengthCompare 4
+    val test = args lengthCompare 5
     if (test != 0) {
       Console.err println USAGE
       System exit 2
@@ -30,12 +34,22 @@ object Main {
 
   private def handleInputArguments(args: Array[String]): Unit = {
     try {
-      val inputDirectory = new File(args(0)).getAbsoluteFile
-      val second = args(1).toInt
-      val third = args(2).toInt
-      val deadline = args(3).toDouble
-      val creator = InstanceCreator forHadoop (inputDirectory, second, third, deadline)
-      creator.create()
+      val inputDirectory = new File(args(1)).getAbsoluteFile
+      val classes = args(2).toInt
+      val concurrency = args(3).toInt
+      val deadline = args(4).toDouble
+
+      val maybeCreator = args.head match {
+        case "-h"|"--help" =>
+          Console.out println USAGE
+          None
+        case "-m"|"--mapreduce" =>
+          Some (InstanceCreator forHadoop (inputDirectory, classes, concurrency, deadline))
+        case "-s"|"--spark" =>
+          Some (InstanceCreator forSpark (inputDirectory, classes, concurrency, deadline))
+      }
+
+      maybeCreator foreach { _.create() }
     } catch {
       case _: NumberFormatException =>
         Console.err println ERROR
