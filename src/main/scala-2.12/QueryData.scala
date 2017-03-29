@@ -53,7 +53,8 @@ abstract class QueryData(directories: Map[String, File], hUp: Int, deadline: Dou
             val (_, provider) = VirtualMachineFeatures(vmId)
             provider -> Map(vm.getName -> parameters)
         }
-        id -> parametersMap.toMap
+
+        id -> collectSubMaps(parametersMap)
     }
   }
 
@@ -87,7 +88,15 @@ abstract class QueryData(directories: Map[String, File], hUp: Int, deadline: Dou
             provider -> Map(vmId -> profile)
         }
 
-        id -> profiles.toMap
+        id -> collectSubMaps(profiles)
+    }
+  }
+
+  private def collectSubMaps [T] (nestedSeq: Traversable[(String, Map[String, T])]): Map[String, Map[String, T]] = {
+    nestedSeq groupBy { _._1 } map {
+      case (key, xs) =>
+        val completeMap = xs map { _._2 } reduce { _ ++ _ }
+        key -> completeMap
     }
   }
 }
