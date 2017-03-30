@@ -46,6 +46,10 @@ sealed abstract class InstanceCreator(directories: Map[String, File], sets: Iter
       val publicCloudParametersMap = new PublicCloudParametersMap (javaPublicCloud)
       instance setMapPublicCloudParameters publicCloudParametersMap
 
+      val filteredDags = jobData.dags filterKeys set
+      val javaDags = JavaConverters mapAsJavaMap filteredDags
+      if (! javaDags.isEmpty) instance setMapDags javaDags
+
       (instanceId, set, instance)
   }
 

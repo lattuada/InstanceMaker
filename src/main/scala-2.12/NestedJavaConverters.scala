@@ -35,4 +35,15 @@ object NestedJavaConverters {
       }
     }
   }
+
+  def mapOfSets (inputMap: Map[String, Set[String]]): util.Map[String, util.Set[String]] = {
+    JavaConverters mapAsJavaMap {
+      inputMap map {
+        case (stage, set) =>
+          stage -> {
+            JavaConverters setAsJavaSet set
+          }
+      }
+    }
+  }
 }

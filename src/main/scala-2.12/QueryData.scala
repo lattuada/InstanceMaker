@@ -14,7 +14,7 @@
  */
 import java.io.File
 
-import it.polimi.diceH2020.SPACE4Cloud.shared.inputDataMultiProvider.{ClassParameters, JobProfile, PublicCloudParameters}
+import it.polimi.diceH2020.SPACE4Cloud.shared.inputDataMultiProvider.{ClassParameters, DirectedAcyclicGraph, JobProfile, PublicCloudParameters}
 
 import scala.annotation.tailrec
 import scala.io.Source
@@ -22,7 +22,7 @@ import scala.util.Random
 
 sealed abstract class QueryData(directories: Map[String, File], hUp: Int, deadline: Double) extends JobData {
 
-  lazy val jobClasses: Map[String, ClassParameters] = directories map {
+  override lazy val jobClasses: Map[String, ClassParameters] = directories map {
     case (id, _) =>
       val jobClass = new ClassParameters
       jobClass setThink 1e4
@@ -42,7 +42,7 @@ sealed abstract class QueryData(directories: Map[String, File], hUp: Int, deadli
       id -> types
   }
 
-  lazy val publicCloud: Map[String, Map[String, Map[String, PublicCloudParameters]]] = {
+  override lazy val publicCloud: Map[String, Map[String, Map[String, PublicCloudParameters]]] = {
     vmDirectories map {
       case (id, types) =>
         val parametersMap = types map {
@@ -73,7 +73,7 @@ sealed abstract class QueryData(directories: Map[String, File], hUp: Int, deadli
 class HadoopQueryData(directories: Map[String, File], hUp: Int, deadline: Double)
   extends QueryData(directories: Map[String, File], hUp: Int, deadline: Double) {
 
-  lazy val jobProfiles: Map[String, Map[String, Map[String, JobProfile]]] = {
+  override lazy val jobProfiles: Map[String, Map[String, Map[String, JobProfile]]] = {
     vmDirectories map {
       case (id, types) =>
         val profiles = types map {
@@ -106,13 +106,15 @@ class HadoopQueryData(directories: Map[String, File], hUp: Int, deadline: Double
         id -> collectSubMaps(profiles)
     }
   }
+
+  override val dags: Map[String, DirectedAcyclicGraph] = Map()
 }
 
 
 class SparkQueryData(directories: Map[String, File], hUp: Int, deadline: Double)
   extends QueryData(directories: Map[String, File], hUp: Int, deadline: Double) {
 
-  lazy val jobProfiles: Map[String, Map[String, Map[String, JobProfile]]] = {
+  override lazy val jobProfiles: Map[String, Map[String, Map[String, JobProfile]]] = {
     vmDirectories map {
       case (id, types) =>
         val profiles = types map {
@@ -173,6 +175,25 @@ class SparkQueryData(directories: Map[String, File], hUp: Int, deadline: Double)
         }
 
         id -> collectSubMaps(profiles)
+    }
+  }
+
+  override lazy val dags: Map[String, DirectedAcyclicGraph] = {
+    vmDirectories flatMap {
+      case (id, types) =>
+        val maybeInputFile = types collectFirst {
+          case directory: File =>
+            directory.listFiles filter { _.getName contains ".lua" } collectFirst {
+              case luaFile: File =>
+                Source fromFile luaFile
+            }
+        }
+        val maybeStagesArray = maybeInputFile.flatten map {
+          _.getLines() filter { _ contains "Stages" }
+        }  map { _.mkString } map { _ stripPrefix "Stages = " }
+        val maybeDag = maybeStagesArray map LuaDagParser.apply map {
+          NestedJavaConverters.mapOfSets } map { new DirectedAcyclicGraph(_) }
+        maybeDag map { id -> _ }
     }
   }
 }

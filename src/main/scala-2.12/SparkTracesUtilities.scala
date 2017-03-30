@@ -25,16 +25,10 @@ trait SparkTracesUtilities {
         val vmId = vmDirectory.getName
         val (_, provider) = VirtualMachineFeatures(vmId)
 
-        vmDirectory.listFiles filter {
+        vmDirectory.listFiles filter { _.getName contains ".txt" } foreach {
           file =>
-            val name = file.getName
-            ( name contains ".txt" ) || ( name contains ".lua" )
-        } foreach {
-          file =>
-            val basename = file.getName
-            val originalName = basename stripSuffix ".txt" stripSuffix ".lua"
-            val extension = basename stripPrefix originalName
-            val outFileName = s"$id${originalName}J$jobId$provider$vmId$extension"
+            val originalName = file.getName stripSuffix ".txt"
+            val outFileName = s"$id${originalName}J$jobId$provider$vmId.txt"
             val copiedFile = new File(outputDirectory, outFileName)
             fileCopyingHelper(file, copiedFile)
         }

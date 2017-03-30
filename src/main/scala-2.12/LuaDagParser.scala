@@ -12,11 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import it.polimi.diceH2020.SPACE4Cloud.shared.inputDataMultiProvider.{ClassParameters, DirectedAcyclicGraph, JobProfile, PublicCloudParameters}
+object LuaDagParser {
+  private lazy val stageRegex = """.*name\w*=\w*"(\w+?)".*post\w*=\w*\{(["\w,\s]*)}.*""".r
+  private lazy val nameRegex = """"(\w+?)"""".r
 
-trait JobData {
-  val jobClasses: Map[String, ClassParameters]
-  val jobProfiles: Map[String, Map[String, Map[String, JobProfile]]]
-  val publicCloud: Map[String, Map[String, Map[String, PublicCloudParameters]]]
-  val dags: Map[String, DirectedAcyclicGraph]
+  def apply (luaString: String): Map[String, Set[String]] = {
+    val stagesStrings = luaString.trim stripPrefix "{" stripSuffix "};" split """}\s*,\s*\{"""
+    val couples = stagesStrings map {
+      case stageRegex(name, post) =>
+        val successors = nameRegex findAllIn post map { _ stripPrefix "\"" stripSuffix "\"" }
+        name -> successors.toSet
+    }
+    couples.toMap
+  }
 }
