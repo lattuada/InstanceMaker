@@ -22,7 +22,7 @@ import scala.util.Random
 
 sealed abstract class QueryData(directories: Map[String, File], hUp: Int, deadline: Double) extends JobData {
 
-  override lazy val jobClasses: Map[String, ClassParameters] = directories map {
+  protected def baseJobClasses: Map[String, ClassParameters] = directories map {
     case (id, _) =>
       val jobClass = new ClassParameters
       jobClass setThink 1e4
@@ -35,6 +35,8 @@ sealed abstract class QueryData(directories: Map[String, File], hUp: Int, deadli
       jobClass setV 0.0
       id -> jobClass
   }
+
+  override lazy val jobClasses: Map[String, ClassParameters] = baseJobClasses
 
   lazy val vmDirectories: Map[String, Array[File]] = directories map {
     case (id, directory) =>
@@ -195,5 +197,12 @@ class SparkQueryData(directories: Map[String, File], hUp: Int, deadline: Double)
           NestedJavaConverters.mapOfSets } map { new DirectedAcyclicGraph(_) }
         maybeDag map { id -> _ }
     }
+  }
+
+  override lazy val jobClasses: Map[String, ClassParameters] = super.baseJobClasses map {
+    case (id, parameters) =>
+      parameters setM 0.0
+      parameters setV 1.0
+      id -> parameters
   }
 }
