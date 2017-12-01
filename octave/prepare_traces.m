@@ -81,7 +81,7 @@ if (isdir (directory))
 
       output_dir = pwd;
       for (ii = 1:num)
-        class = num2str (ii);
+        class = dirs{ii};
         dir = [output_dir, "/", class];
         mkdir (dir);
         
