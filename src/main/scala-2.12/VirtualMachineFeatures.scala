@@ -19,6 +19,12 @@ object VirtualMachineFeatures {
     case name if name contains "5xlarge" => 40 -> "Cineca"
     case name if name contains "xlarge" => 8 -> "Amazon"
     case name if name contains "large" => 4 -> "Amazon"
+    case name if name contains "A3" => 4 -> "Azure"
+    case name if name contains "A4" => 8 -> "Azure"
+    case name if name contains "D4" => 8 -> "Azure"
+    case name if name contains "D12v2" => 4 -> "Azure"
+    case name if name contains "D13v2" => 8 -> "Azure"
+    case name if name contains "D14v2" => 16 -> "Azure"
     case _ => throw new RuntimeException ("error: unrecognized VM type")
   }
 }
