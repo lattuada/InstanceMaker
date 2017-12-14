@@ -11,9 +11,10 @@ lazy val root = (project in file(".")).
     name := "InstanceMaker",
     resolvers ++= Seq(
       "Deib Polimi" at "https://github.com/deib-polimi/deib-polimi-mvn-repo/raw/master/releases",
-      "Deib Polimi Snapshots" at "https://github.com/deib-polimi/deib-polimi-mvn-repo/raw/master/snapshots"
+      "Deib Polimi Snapshots" at "https://github.com/deib-polimi/deib-polimi-mvn-repo/raw/master/snapshots",
+      Resolver.mavenLocal
     ),
-    libraryDependencies += "it.polimi.diceH2020" % "SPACE4Cloud-shared" % "0.2.12-SNAPSHOT",
+    libraryDependencies += "it.polimi.diceH2020" % "SPACE4Cloud-shared" % "0.3.1-SNAPSHOT",
     libraryDependencies += "com.jsuereth" %% "scala-arm" % "2.0"
   )
 
