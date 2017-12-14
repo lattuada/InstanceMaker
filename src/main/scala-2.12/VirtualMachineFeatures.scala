@@ -1,4 +1,5 @@
 /* Copyright 2017 Eugenio Gianniti
+ * Copyright 2017 Marco Lattuada 
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +14,10 @@
  * limitations under the License.
  */
 object VirtualMachineFeatures {
-  def apply (vmId: String): (Int, String) = vmId match {
-    case name if name contains "medium" => 2 -> "Amazon"
-    case name if name contains "2xlarge" => 16 -> "Amazon"
-    case name if name contains "5xlarge" => 40 -> "Cineca"
-    case name if name contains "xlarge" => 8 -> "Amazon"
-    case name if name contains "large" => 4 -> "Amazon"
-    case name if name contains "A3" => 4 -> "Azure"
-    case name if name contains "A4" => 8 -> "Azure"
-    case name if name contains "D4" => 8 -> "Azure"
-    case name if name contains "D12v2" => 4 -> "Azure"
-    case name if name contains "D13v2" => 8 -> "Azure"
-    case name if name contains "D14v2" => 16 -> "Azure"
-    case _ => throw new RuntimeException ("error: unrecognized VM type")
+  def apply (vmId: String): (String, String) = {
+     val split = vmId.split("_")
+     if(split.size !=2)
+        throw new RuntimeException ("error: unrecognized VM type")
+     return (split(0), split(1))
   }
 }

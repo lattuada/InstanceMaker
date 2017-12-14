@@ -21,8 +21,8 @@ trait HadoopTracesUtilities {
     val jobId = inputDirectory.getName
     inputDirectory.listFiles filter { _.isDirectory } foreach {
       vmDirectory =>
-        val vmId = vmDirectory.getName
-        val (_, provider) = VirtualMachineFeatures(vmId)
+        val vmDirectoryName = vmDirectory.getName
+        val (provider, vmId) = VirtualMachineFeatures(vmDirectoryName)
 
         val mapFileName = s"${id}MapJ$jobId$provider$vmId.txt"
         val originalMapFile = new File(vmDirectory, "map.txt")

@@ -22,8 +22,8 @@ trait SparkTracesUtilities {
 
     inputDirectory.listFiles filter { _.isDirectory } foreach {
       vmDirectory =>
-        val vmId = vmDirectory.getName
-        val (_, provider) = VirtualMachineFeatures(vmId)
+        val vmDirName = vmDirectory.getName
+        val (provider, vmId) = VirtualMachineFeatures(vmDirName)
 
         vmDirectory.listFiles filter { _.getName contains ".txt" } foreach {
           file =>

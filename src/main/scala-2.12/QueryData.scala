@@ -53,9 +53,9 @@ sealed abstract class QueryData(directories: Map[String, File], hUp: Int, deadli
             parameters setEta Random.nextDouble * 0.3 + 0.1
             parameters setR (Random nextInt 31) + 10
 
-            val vmId = vm.getName
-            val (_, provider) = VirtualMachineFeatures(vmId)
-            provider -> Map(vm.getName -> parameters)
+            val vmDirectoryName = vm.getName
+            val (provider, vmId) = VirtualMachineFeatures(vmDirectoryName)
+            provider -> Map(vmId -> parameters)
         }
 
         id -> collectSubMaps(parametersMap)
@@ -80,8 +80,8 @@ class HadoopQueryData(directories: Map[String, File], hUp: Int, deadline: Double
       case (id, types) =>
         val profiles = types map {
           vm =>
-            val vmId = vm.getName
-            val (_, provider) = VirtualMachineFeatures(vmId)
+            val vmDirectory = vm.getName
+            val (provider, vmId) = VirtualMachineFeatures(vmDirectory)
 
             val profile = new JobProfile
             profile put ("sh1max", 0.0)
@@ -171,8 +171,8 @@ class SparkQueryData(directories: Map[String, File], hUp: Int, deadline: Double)
                 profile put (header, value)
             }
 
-            val vmId = vm.getName
-            val (_, provider) = VirtualMachineFeatures(vmId)
+            val vmDirectory = vm.getName
+            val (provider, vmId) = VirtualMachineFeatures(vmDirectory)
             provider -> Map(vmId -> profile)
         }
 
