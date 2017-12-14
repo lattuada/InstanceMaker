@@ -14,7 +14,7 @@ lazy val root = (project in file(".")).
       "Deib Polimi Snapshots" at "https://github.com/deib-polimi/deib-polimi-mvn-repo/raw/master/snapshots",
       Resolver.mavenLocal
     ),
-    libraryDependencies += "it.polimi.diceH2020" % "SPACE4Cloud-shared" % "0.3.1-SNAPSHOT",
+    libraryDependencies += "it.polimi.diceH2020" % "SPACE4Cloud-shared" % "0.3.5-dev",
     libraryDependencies += "com.jsuereth" %% "scala-arm" % "2.0"
   )
 
